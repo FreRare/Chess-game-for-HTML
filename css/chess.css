@@ -1,0 +1,23 @@
+div{
+    position: relative;
+    margin: 0;
+}
+
+.chess{
+    top: 100px;
+    left: 100px;
+    margin: 0;
+    padding: 0;
+}
+
+#board{
+    z-index: 0;
+    position: fixed;
+}
+#pieces{
+    top: 92px;
+    left: 92px;
+    z-index: 1;
+    position: absolute;
+
+}
