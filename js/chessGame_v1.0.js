@@ -1,10 +1,61 @@
 //Chess game for browsers in JAVASCRIPT
-//Made by: Takács Ábel
+//Made by: FreRare aka Takable
+//For usage you need two html canvas with the following ids:
+//Change names to personalize
+const game_canvas_id = "pieces";
+const board_canvas_id = "board";
+//Id of the container div:
+const container_div_id = "chess_container";
+//IMPORTANT!!
+//The following function initialises the canvases with the needed css formats and appends it to the container div
+//Positions are important because the canvases are layered
+//Call the function at body onload among main()
+function get_canvases(){
+    console.log("canvas addition started")
+    let board_canvas = document.createElement("CANVAS");
+    let game_canvas = document.createElement("CANVAS");
+    console.log("created");
+    board_canvas.classList.add("chess");
+    game_canvas.classList.add("chess");
+    board_canvas.setAttribute("id", board_canvas_id);
+    board_canvas.setAttribute("width", "420");
+    board_canvas.setAttribute("height", "420");
+    game_canvas.setAttribute("id", game_canvas_id);
+    game_canvas.setAttribute("width", "420");
+    game_canvas.setAttribute("height", "420");
+    console.log("classed, idd");
+    board_canvas.style.cssText =
+        "z-index: 0;" +
+        "position: fixed;" +
+        "top: 100px;" +
+        "left: 100px;" +
+        "margin: 0;" +
+        "padding: 0;";
+    game_canvas.style.cssText =
+        "top: 92px;" +
+        "left: 92px;" +
+        "z-index: 1;" +
+        "position: absolute;" +
+        "margin: 0;" +
+        "padding: 0;";
+    console.log("styled");
+    let container_div = document.getElementById(container_div_id);
+    console.log("div got");
+    container_div.appendChild(board_canvas);
+    container_div.appendChild(game_canvas);
+    console.log("appended");
+}
+
+//The source of the pieces image
+const piece_img_src = "../img/pieces.png";
 
 //The size of a piece image in the pieces picture
+//Default = 100
+//Possible change if using other piece picture
 const PIECE_IMAGE_SIZE = 100;
 
 //Piece codes
+//DO NOT CHANGE!
 const PAWN = 0,
     ROOK = 1,
     KNIGHT = 2,
@@ -100,16 +151,6 @@ class Piece {
 //The default positions of pieces
 const default_positions = {
     BLACK: [
-        /*new Pawn(1, 0, true, "active"),
-        new Pawn(1, 1, true, "active"),
-        new Pawn(1, 2, true, "active"),
-        new Pawn(1, 3, true, "active"),
-        new Pawn(1, 4, true, "active"),
-        new Pawn(1, 5, true, "active"),
-        new Pawn(1, 6, true, "active"),
-        new Pawn(1, 7, true, "active"),
-        new Rook(0, 0, true, "active"),
-        new Rook(0, 7, true, "active"),*/
         new Piece("pawn", 1, 0, true, "active"),
         new Piece("pawn", 1, 1, true, "active"),
         new Piece("pawn", 1, 2, true, "active"),
@@ -128,17 +169,6 @@ const default_positions = {
         new Piece("queen", 0, 4, true, "active")
     ],
     WHITE: [
-        /*
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Pawn(1, 1, false, "active"),
-        new Rook(7, 0, false, "active"),
-        new Rook(7, 7, false, "active"),*/
         new Piece("pawn", 6, 0, false, "active"),
         new Piece("pawn", 6, 1, false, "active"),
         new Piece("pawn", 6, 2, false, "active"),
@@ -172,8 +202,8 @@ function coordinates_to_string(x, y) {
 //The class that implements the game functions
 class Board {
     constructor() {
-        this._game_canvas = document.getElementById("pieces");  //The game canvas, where the pieces are displayed
-        this._board_canvas = document.getElementById("board");  //Where the board is displayed
+        this._game_canvas = document.getElementById(game_canvas_id);  //The game canvas, where the pieces are displayed
+        this._board_canvas = document.getElementById(board_canvas_id);  //Where the board is displayed
         this._game_ctx = this._game_canvas.getContext("2d");    //Contexts
         this._board_ctx = this._board_canvas.getContext("2d");
         this._canvas_size = this._game_canvas.width;                    //The size of the canvas (width = height)
@@ -188,7 +218,7 @@ class Board {
         //Pieces image
         this._pieces_img = new Image();
         //Pieces image source
-        this._pieces_img.src = "./img/pieces.png";
+        this._pieces_img.src = piece_img_src;
         //Onload -> drawing the pieces
         this._pieces_img.onload = () => {
             this._game_ctx.clearRect(0, 0, this._canvas_size, this._canvas_size);
@@ -781,7 +811,7 @@ class Board {
                 this._select_piece_and_get_moves(piece_on_cell);
             } else {
                 possible_moves = this._select_piece_and_get_moves(selected_piece);
-                if (this.check_if_valid_move(clicked_cell.x_pos, clicked_cell.y_pos, possible_moves)) {
+                if (this._check_if_valid_move(clicked_cell.x_pos, clicked_cell.y_pos, possible_moves)) {
                     console.log("Valid move!");
                     this._full_game.push(this.piece_positions);
                     this._round_counter++;

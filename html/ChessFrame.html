@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess</title>
-    <link rel="stylesheet" href="chess.css"/>
-    <script type="text/javascript" src="chessGame_v1.0.js"></script>
+    <link rel="stylesheet" href="../css/chess.css"/>
+    <script type="text/javascript" src="../js/chessGame_v1.1.js"></script>
 </head>
-<body onload="main()">
-<div>
-    <canvas class="chess" id="board" width="420" height="420"></canvas>
-    <canvas class="chess" id="pieces" width="420" height="420"></canvas>
+<body onload="get_canvases(); create_cpanel(); main();">
+<div id="chess_control_panel">
+</div>
+<div id="chess_container">
 </div>
 </body>
 </html>
