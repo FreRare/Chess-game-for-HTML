@@ -18,7 +18,7 @@ const cpanel_div_id = "chess_control_panel";
 
 //The following function initialises the canvases with the needed css formats and appends it to the container div
 //Positions are important because the canvases are layered
-function get_canvases() {
+function generate_canvases() {
     let board_canvas = document.createElement("CANVAS");
     let game_canvas = document.createElement("CANVAS");
     board_canvas.classList.add("chess");
@@ -96,7 +96,7 @@ const board_canvas_id = "board";
 
 
 //The source of the pieces image
-const piece_img_src = "../img/pieces.png";
+const piece_img_src = "../img/pieces2.png";
 
 //The size of a piece image in the pieces picture
 //Default = 100
@@ -105,20 +105,19 @@ const PIECE_IMAGE_SIZE = 100;
 
 //Piece codes
 //DO NOT CHANGE!
-const PAWN = 0,
-    ROOK = 1,
-    KNIGHT = 2,
-    BISHOP = 3,
-    QUEEN = 4,
-    KING = 5;
+const PAWN = 5,
+    ROOK = 4,
+    KNIGHT = 3,
+    BISHOP = 2,
+    QUEEN = 1,
+    KING = 0;
 
 //Need two global variables for good working code (selected_piece = null, black_turn = false;)
 let selected_piece = null
 let black_turn = false;
 
-
 class Chess_board {
-    constructor() {
+    constructor(player1, player2) {
         this._game_canvas = document.getElementById(game_canvas_id);  //The game canvas, where the pieces are displayed
         this._board_canvas = document.getElementById(board_canvas_id);  //Where the board is displayed
         this._game_ctx = this._game_canvas.getContext("2d");    //Contexts
@@ -137,87 +136,90 @@ class Chess_board {
         this._pieces_img.src = piece_img_src;
         //Stores the whole game step by step
         this._full_game = [];
+        //Player names:
+        this.player_one_name = player1;
+        this.player_two_name = player2;
 
         //Piece classes
         //Parent class:
         //Class that represents a piece
         //Has a name, position, black or white, code and status ('active'/'inactive')
         this.Piece = class Piece {
-                constructor(name, col, row, black, status = "active") {
-                    if (typeof (name) !== "string" || typeof (col) !== "number" || typeof (row) !== "number" || typeof (black) !== "boolean") {
-                        throw TypeError("[!] Invalid argument(s) for Piece constructor!");
-                    }
-                    this._name = name;
-                    this.x = col;
-                    this.y = row;
-                    this._black = black;
-                    this.status = status;
-                    switch (name) {
-                        case "pawn":
-                            this._code = PAWN;
-                            break;
-                        case "rook":
-                            this._code = ROOK;
-                            break;
-                        case "knight":
-                            this._code = KNIGHT;
-                            break;
-                        case "bishop":
-                            this._code = BISHOP;
-                            break;
-                        case "king":
-                            this._code = KING;
-                            break;
-                        case "queen":
-                            this._code = QUEEN;
-                            break;
-                        default:
-                            this._code = -1;
-                    }
+            constructor(name, col, row, black, status = "active") {
+                if (typeof (name) !== "string" || typeof (col) !== "number" || typeof (row) !== "number" || typeof (black) !== "boolean") {
+                    throw TypeError("[!] Invalid argument(s) for Piece constructor!");
                 }
-
-                get name() {
-                    return this._name;
+                this._name = name;
+                this.x = col;
+                this.y = row;
+                this._black = black;
+                this.status = status;
+                switch (name) {
+                    case "pawn":
+                        this._code = PAWN;
+                        break;
+                    case "rook":
+                        this._code = ROOK;
+                        break;
+                    case "knight":
+                        this._code = KNIGHT;
+                        break;
+                    case "bishop":
+                        this._code = BISHOP;
+                        break;
+                    case "king":
+                        this._code = KING;
+                        break;
+                    case "queen":
+                        this._code = QUEEN;
+                        break;
+                    default:
+                        this._code = -1;
                 }
-
-                get black() {
-                    return this._black;
-                }
-
-                get piece_code() {
-                    return this._code;
-                }
-
-                get x_pos() {
-                    return this.x;
-                }
-
-                get y_pos() {
-                    return this.y;
-                }
-
-                set x_pos(x) {
-                    if (0 <= x < 8) {
-                        this.x = x;
-                    } else {
-                        alert("Invalid coordinate!");
-                    }
-                }
-
-                set y_pos(y) {
-                    if (0 <= y < 8) {
-                        this.y = y;
-                    } else {
-                        alert("Invalid coordinate!");
-                    }
-                }
-
-                to_string() {
-                    return `${(this.black ? "Black" : "White")} ${this.name} piece at:\n\tx -> ${this.x_pos}\n\ty -> ${this.y_pos}\n
-                    `;
-                }
-
             }
+
+            get name() {
+                return this._name;
+            }
+
+            get black() {
+                return this._black;
+            }
+
+            get piece_code() {
+                return this._code;
+            }
+
+            get x_pos() {
+                return this.x;
+            }
+
+            get y_pos() {
+                return this.y;
+            }
+
+            set x_pos(x) {
+                if (0 <= x < 8) {
+                    this.x = x;
+                } else {
+                    alert("Invalid coordinate!");
+                }
+            }
+
+            set y_pos(y) {
+                if (0 <= y < 8) {
+                    this.y = y;
+                } else {
+                    alert("Invalid coordinate!");
+                }
+            }
+
+            to_string() {
+                return `${(this.black ? "Black" : "White")} ${this.name} piece at:\n\tx -> ${this.x_pos}\n\ty -> ${this.y_pos}\n
+                    `;
+            }
+
+        }
         //Each class has it's own get_moves() -> returns all moves for the piece like it's the only one on the board
         //Pawn piece class !!At validation need to filter steps for invalid kicking
         this.Pawn = class Pawn extends this.Piece {
@@ -602,7 +604,7 @@ class Chess_board {
         }
 
         //Default piece positions
-        this.piece_positions = [
+        this._default_positions = [
             new this.Pawn(0, 1, true),
             new this.Pawn(1, 1, true),
             new this.Pawn(2, 1, true),
@@ -636,6 +638,7 @@ class Chess_board {
             new this.Queen(3, 7, false),
             new this.King(4, 7, false)
         ];
+        this.piece_positions = this._clone_positions(this._default_positions);
 
         //Onclick event listener
         this._game_canvas.addEventListener('click', (event) => {
@@ -646,7 +649,7 @@ class Chess_board {
             let clicked_cell = this._get_cell_from_click(x_pos, y_pos);
             //Piece on the clicked cell
             let piece_on_cell = Chess_board._check_piece_on_cell(clicked_cell.x_pos, clicked_cell.y_pos, this.piece_positions);
-            //If piece on cell is not colored the rounder than ignore it
+            //If piece on cell is not colored same as rounder than ignore it
             if (piece_on_cell && piece_on_cell.black !== black_turn) {
                 piece_on_cell = null;
             }
@@ -655,15 +658,13 @@ class Chess_board {
             } else {
                 let moves = this._select_piece_and_get_moves(selected_piece);
                 if (this._check_if_valid_move(clicked_cell.x_pos, clicked_cell.y_pos, moves)) {
-                    console.log("Valid move!");
                     this._full_game.push(this._clone_positions(this.piece_positions));
                     this._move_piece_to(clicked_cell.x_pos, clicked_cell.y_pos, selected_piece);
-                    console.log("Piece moved!");
                     //Side changer
                     //Ready for next round
                     selected_piece = null;
                     black_turn = !black_turn;
-                    this._change_sides();
+                    this._change_sides(this.piece_positions);
                     //Checking if check or checkmate
                     if (this._is_check_mate()) {
                         this._draw_check_mate();
@@ -671,7 +672,6 @@ class Chess_board {
                         this._draw_check();
                     }
                 } else {
-                    console.log("Invalid move!");
                     this._select_piece_and_get_moves(piece_on_cell);
                 }
             }
@@ -689,8 +689,8 @@ class Chess_board {
     }
 
     //Changes the sides
-    _change_sides() {
-        for (let p of this.piece_positions) {
+    _change_sides(where) {
+        for (let p of where) {
             p.x_pos = 7 - p.x_pos;
             p.y_pos = 7 - p.y_pos;
         }
@@ -709,7 +709,7 @@ class Chess_board {
         }
         let image_coordinates = {
             x: piece.piece_code * PIECE_IMAGE_SIZE,
-            y: (piece.black ? 0 : PIECE_IMAGE_SIZE)
+            y: (!piece.black ? 0 : PIECE_IMAGE_SIZE)
         }
         this._game_ctx.drawImage(this._pieces_img, image_coordinates.x, image_coordinates.y,
             PIECE_IMAGE_SIZE, PIECE_IMAGE_SIZE, piece.x_pos * this._cell_size, piece.y_pos * this._cell_size, this._cell_size, this._cell_size);
@@ -757,7 +757,7 @@ class Chess_board {
     //
     static _check_piece_on_cell(x, y, board) {
         if (typeof x !== "number" || typeof y !== "number") {
-            throw TypeError("[!] Invalid argument! (Chess_board.check_piece_on_cell)" + this.coordinates_to_string(x, y));
+            throw TypeError("[!] Invalid argument! (Chess_board.check_piece_on_cell)" + x + " : " + y);
         }
         return board.find(p => p.x_pos === x && p.y_pos === y && p.status === "active");
     }
@@ -768,7 +768,7 @@ class Chess_board {
     _highlight_cell(x, y) {
         let origoX = x * this._cell_size + this._cell_size / 2;
         let origoY = y * this._cell_size + this._cell_size / 2;
-        let rad = this._cell_size / 9;
+        let rad = this._cell_size / 11;
         let ctx = this._game_ctx;
 
         //Customizing highlight circle
@@ -781,7 +781,7 @@ class Chess_board {
         } else {
             ctx.strokeStyle = this._hightlight_color2;
         }
-        ctx.lineWidth = 11;
+        ctx.lineWidth = 9;
         ctx.stroke();
         ctx.closePath();
     }
@@ -806,9 +806,109 @@ class Chess_board {
         return possible_moves;
     }
 
+    //Checks if the given king piece can castle move
+    _can_castle(piece){
+        if(!piece instanceof Piece){
+            return -1;
+        }
+        if(!piece instanceof this.King){
+            return -1;
+        }
+        //Checkin if king was moved
+        for(let pos of this._full_game){
+            pos = pos.filter(x => x.piece_code === KING && x.black === piece.black);
+            if(piece.x_pos !== pos.x_pos || piece.y_pos !== pos.y_pos){
+                console.log("King piece was moved, cannot castle");
+                return -1;
+            }
+        }
+        //Checking if rooks were moved
+        let l_rook = true;
+        let r_rook = true;
+        let rooks = this._default_positions.filter(x => x.piece_code === ROOK && x.black === piece.black);
+        let left = rooks.find(x => x.x_pos === 0);
+        let right =  rooks.find(x => x.x_pos === 7);
+        console.log(left, right);
+        for(let pos of this._full_game){
+            if(!Chess_board._check_piece_on_cell(left.x_pos, left.y_pos, pos)){
+                l_rook = false;
+            }
+            if(!Chess_board._check_piece_on_cell(right.x_pos, right.y_pos, pos)){
+                r_rook = false;
+            }
+        }
+        //Return 2 if both sides can castle
+        //0 if only left and 1 if only right
+        if(l_rook && r_rook){
+            return 2;
+        }else if(l_rook){
+            return 0;
+        }else if(r_rook){
+            return 1;
+        }
+
+    }
+
+    _get_castle_moves(piece){
+        let castle_moves = [];
+        let def_king_pos = this._default_positions.filter(x=> x.black === black_turn && x.piece_code === KING);
+        for(let positions of this._full_game){
+            let king_piece = positions.filter(x=> x.black === black_turn && x.piece_code === KING);
+            console.log("King is:", king_piece);
+            //If king is moved from default position can not castle
+            if(king_piece.x !== def_king_pos.x_pos || king_piece.y !== def_king_pos.y_pos){
+                break;
+            }
+
+            //Checking if rooks are moved
+            let rooks = positions.filter(x=> x.black === black_turn && x.piece_code === ROOK);
+            console.log("Rooks are:", rooks);
+            if(rooks[0].x_pos !== 0 || rooks[0].x_pos !== 7 || rooks[0].y_pos !== 0 || rooks[0].y_pos !== 7){
+                console.log("First rook removed!");
+                rooks.unshift();
+            }
+            if(rooks[0].x_pos !== 0 || rooks[0].x_pos !== 7 || rooks[0].y_pos !== 0 || rooks[0].y_pos !== 7){
+                console.log("Second rook removed!");
+                rooks.unshift();
+            }
+            if(rooks.length === 0){
+                console.log("All two rooks are moved!");
+                break;
+            }
+
+            //If there is valid castle move we get it! Add it to all moves if found
+            //Later when moving nedd to move rook along with it -> need to check if is castleing int the move!!
+            if(rooks.length === 2){
+                if(Chess_board._check_piece_on_cell(piece.x_pos - 1, piece.y_pos, this.piece_positions)){
+                    console.log("Piece in the way!");
+                }else if(Chess_board._check_piece_on_cell(piece.x_pos - 2, piece.y_pos, this.piece_positions)){
+                    console.log("Piece on the cell!");
+                }else{
+                    castle_moves.push({x:piece.x_pos - 2, y:piece.y_pos});
+                }
+                
+                if(Chess_board._check_piece_on_cell(piece.x_pos + 1, piece.y_pos, this.piece_positions)){
+                    console.log("Piece in the way!");
+                }else if(Chess_board._check_piece_on_cell(piece.x_pos + 2, piece.y_pos, this.piece_positions)){
+                    console.log("Piece on the cell!");
+                }else{
+                    castle_moves.push({x:piece.x_pos + 2, y:piece.y_pos});
+                }
+
+            }
+            
+        }
+    }
+
     //Returns the valid moves for the given piece
     _get_valid_moves(piece) {
         const all_moves = piece.get_moves(this.piece_positions);
+
+        //Checking if king, than check for castle move
+        if(piece instanceof this.King){
+           
+        }
+
         let valid_moves = [];
         let test_positions = this._clone_positions(this.piece_positions);
         let test_piece = test_positions.filter(x => x.x_pos === piece.x_pos && x.y_pos === piece.y_pos && x.black === black_turn)[0];
@@ -841,24 +941,24 @@ class Chess_board {
     }
 
     _is_check(piece_positions) {
+        this._change_sides(piece_positions);
         let team = piece_positions.filter(x => x.black === black_turn);
         let enemy = piece_positions.filter(x => x.black !== black_turn);
         enemy = enemy.filter(x => x.status === "active");
         team = team.filter(x => x.status === "active");
         let king_pos = team.find(x => x.piece_code === KING);
-        this._change_sides();
         black_turn = !black_turn;
         for (let t of enemy) {
             let moves = t.get_moves(piece_positions);
             for (let m of moves) {
                 if (m.X === king_pos.x_pos && m.Y === king_pos.y_pos) {
-                    this._change_sides();
+                    this._change_sides(piece_positions);
                     black_turn = !black_turn;
                     return t;
                 }
             }
         }
-        this._change_sides();
+        this._change_sides(piece_positions);
         black_turn = !black_turn;
         return false;
     }
@@ -904,9 +1004,9 @@ class Chess_board {
     _draw_check_mate() {
         this._draw_table();
         this._game_ctx.fillStyle = this._text_color;
-        this._game_ctx.font = "42px Comic Sans Ms";
+        this._game_ctx.font = this._canvas_size/10+"px Comic Sans Ms";
         this._game_ctx.fillText("CHECK MATE", this._canvas_size / 6, this._canvas_size / 2);
-        this._game_ctx.fillText((black_turn ? "White wins!" : "Black wins!"), this._canvas_size / 4, this._canvas_size / 2 + 52);
+        this._game_ctx.fillText((black_turn ? this.player_one_name+" wins!" : this.player_two_name+" wins!"), this._canvas_size / 4, this._canvas_size / 2 + this._canvas_size/10+10);
     }
 
     //
@@ -918,7 +1018,7 @@ class Chess_board {
             throw Error("Invalid argument!");
         }
         let clone = [];
-        for (let p of this.piece_positions) {
+        for (let p of from) {
             if (p instanceof this.Pawn) {
                 clone.push(new this.Pawn(p.x_pos, p.y_pos, p.black));
             } else if (p instanceof this.Rook) {
@@ -958,7 +1058,6 @@ class Chess_board {
         //Removing piece if kicked down
         let piece_on_cell = Chess_board._check_piece_on_cell(x, y, this.piece_positions);
         if (piece_on_cell != null) {
-            console.log("Kicked down piece is : " + piece_on_cell.to_string());
             piece_on_cell.status = "inactive";
         }
         this.piece_positions = this.piece_positions.filter(p => p.status === "active");
@@ -992,69 +1091,48 @@ class Chess_board {
     //Restarts the game
     restart() {
         this._clear();
-        this.piece_positions = [
-            new this.Pawn(0, 1, true),
-            new this.Pawn(1, 1, true),
-            new this.Pawn(2, 1, true),
-            new this.Pawn(3, 1, true),
-            new this.Pawn(4, 1, true),
-            new this.Pawn(5, 1, true),
-            new this.Pawn(6, 1, true),
-            new this.Pawn(7, 1, true),
-            new this.Rook(0, 0, true),
-            new this.Rook(7, 0, true),
-            new this.Knight(1, 0, true),
-            new this.Knight(6, 0, true),
-            new this.Bishop(2, 0, true),
-            new this.Bishop(5, 0, true),
-            new this.Queen(3, 0, true),
-            new this.King(4, 0, true),
-            new this.Pawn(0, 6, false),
-            new this.Pawn(1, 6, false),
-            new this.Pawn(2, 6, false),
-            new this.Pawn(3, 6, false),
-            new this.Pawn(4, 6, false),
-            new this.Pawn(5, 6, false),
-            new this.Pawn(6, 6, false),
-            new this.Pawn(7, 6, false),
-            new this.Rook(0, 7, false),
-            new this.Rook(7, 7, false),
-            new this.Knight(1, 7, false),
-            new this.Knight(6, 7, false),
-            new this.Bishop(2, 7, false),
-            new this.Bishop(5, 7, false),
-            new this.Queen(3, 7, false),
-            new this.King(4, 7, false)
-        ];
+        this.piece_positions = this._clone_positions(this._default_positions);
         this._full_game = [];
         selected_piece = null;
         black_turn = false;
         this._draw_table();
     }
-
 }
 
-function main() {
+function play_game() {
     create_control_panel();
-    get_canvases();
+    generate_canvases();
     let start_button = document.getElementById("start_button");
     let back_button = document.getElementById("back_button");
-
     let game_table = new Chess_board();
     let game = false;
 
     start_button.addEventListener("click", () => {
-        if (!game) {
-            game = true;
-            start_button.innerText = "Restart game";
-            game_table.start();
-        } else {
-            game_table.restart();
+        let player_one = document.getElementById("player1").value;
+        let player_two = document.getElementById("player2").value;
+        if(player_one.length < 1 || player_two.length < 1){
+            alert("Names should be given!");
+        }else {
+            game_table.player_one_name = player_one;
+            game_table.player_two_name = player_two;
+            if (!game) {
+                game = true;
+                start_button.innerText = "Restart game";
+                game_table.start();
+            } else {
+                game_table.restart();
+            }
         }
     }, false);
 
     back_button.addEventListener("click", () => {
-        //Setting back to previous position
-        game_table.back();
+        try {
+            if (game_table.player_one_name.length > 0 && game_table.player_two_name.length > 0) {
+                //Setting back to previous position
+                game_table.back();
+            }
+        }catch (error){
+            alert("No game!");
+        }
     }, false);
 }
